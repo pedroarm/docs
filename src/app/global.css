@@ -1,0 +1,72 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* neutral surfaces with a single blue accent */
+:root {
+  --color-fd-background: hsl(0, 0%, 100%);
+  --color-fd-card: hsl(0, 0%, 98%);
+  --color-fd-primary: hsl(217, 91%, 50%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-ring: hsl(217, 91%, 60%);
+}
+
+.dark {
+  --color-fd-background: hsl(0, 0%, 7.04%);
+  --color-fd-card: hsl(0, 0%, 9.8%);
+  --color-fd-primary: hsl(213, 94%, 68%);
+  --color-fd-primary-foreground: hsl(0, 0%, 9%);
+  --color-fd-ring: hsl(213, 94%, 68%);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* task lists: rows large enough to tap during a service */
+.prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose li.task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-left: 0;
+}
+
+.prose li.task-list-item input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.3rem 0 0;
+  accent-color: var(--color-fd-primary);
+}
+
+.checklist li.task-list-item {
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checklist li.task-list-item:hover {
+  background: var(--color-fd-accent);
+}
+
+.checklist li.task-list-item:has(input:checked) {
+  color: var(--color-fd-muted-foreground);
+  text-decoration: line-through;
+}
+
+.checklist ul.contains-task-list {
+  margin: 0;
+}
