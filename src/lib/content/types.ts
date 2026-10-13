@@ -12,8 +12,11 @@ export interface ContentSnapshot {
   files: ContentFile[];
   /** resolve a path relative to the content root into a URL an `<img>` can load */
   assetUrl: (path: string) => string;
-  /** assets served by the image optimizer need an allowed remote host */
-  optimizeImages: boolean;
+  /**
+   * Images under this origin go through the Next image optimizer, the host must be allowed in `next.config.mjs`.
+   * Anything else (other sites, local files) is loaded as-is.
+   */
+  imageOrigin?: string;
 }
 
 export function isContentFile(path: string) {

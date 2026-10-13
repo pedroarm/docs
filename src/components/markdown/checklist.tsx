@@ -16,12 +16,14 @@ import { RotateCcw } from 'lucide-react';
 
 const ChecklistContext = createContext(false);
 
-// progress lives in localStorage, mirrored in memory so it still works when storage is unavailable (private mode)
-const memory = new Map<string, string>();
+// progress lives in localStorage; `unsaved` only holds what could not be written there (private mode, storage
+// full), so the checklist still works for the visit without hiding updates made in another tab
+const unsaved = new Map<string, string>();
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
+  // fired when another tab changes the storage
   window.addEventListener('storage', listener);
   return () => {
     listeners.delete(listener);
@@ -30,8 +32,8 @@ function subscribe(listener: () => void) {
 }
 
 function read(key: string): string {
-  const cached = memory.get(key);
-  if (cached !== undefined) return cached;
+  const pending = unsaved.get(key);
+  if (pending !== undefined) return pending;
 
   try {
     return localStorage.getItem(key) ?? '[]';
@@ -42,12 +44,12 @@ function read(key: string): string {
 
 function write(key: string, value: boolean[]) {
   const json = JSON.stringify(value);
-  memory.set(key, json);
   try {
     if (value.some(Boolean)) localStorage.setItem(key, json);
     else localStorage.removeItem(key);
+    unsaved.delete(key);
   } catch {
-    // kept in memory for this visit
+    unsaved.set(key, json);
   }
   for (const listener of listeners) listener();
 }
@@ -64,7 +66,7 @@ function parse(json: string): boolean[] {
 /**
  * Makes the task list inside it checkable, progress is kept on this device.
  *
- * `id` separates multiple checklists on the same page.
+ * `id` separates multiple checklists on the same page, the compiler guarantees it is unique within the page.
  */
 export function Checklist({ id = 'default', children }: { id?: string; children: ReactNode }) {
   const pathname = usePathname();

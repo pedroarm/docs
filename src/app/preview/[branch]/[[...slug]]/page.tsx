@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { DocsPageView } from '@/components/docs-page';
+import { getAreas } from '@/lib/areas';
 import { getPreviewDocs } from '@/lib/source';
 
 type Props = PageProps<'/preview/[branch]/[[...slug]]'>;
@@ -16,7 +17,8 @@ async function getPage(props: Props) {
 export default async function Page(props: Props) {
   const { docs, slug, page } = await getPage(props);
   if (!page && !slug) {
-    const first = docs.source.getPages()[0];
+    // start where the menu starts, `getPages()` is not in menu order
+    const first = getAreas(docs.source.getPageTree())[0];
     if (first) redirect(first.url);
   }
   if (!page) notFound();

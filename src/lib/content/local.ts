@@ -41,7 +41,6 @@ export async function getLocalSnapshot(dir: string): Promise<ContentSnapshot> {
     id,
     files,
     assetUrl: (asset) => `${localAssetRoute}/${asset.split('/').map(encodeURIComponent).join('/')}`,
-    optimizeImages: false,
   };
   return previous;
 }

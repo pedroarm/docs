@@ -17,10 +17,7 @@ import {
   type StructuredData,
 } from 'fumadocs-core/mdx-plugins';
 import type { TOCItemType } from 'fumadocs-core/toc';
-
-/** components authors may use, anything else is unwrapped into its content */
-const allowedComponents = new Set(['Callout', 'Steps', 'Step', 'Tabs', 'Tab', 'YouTube', 'Checklist']);
-const allowedElements = new Set(['br', 'kbd', 'details', 'summary', 'sub', 'sup', 'mark']);
+import { allowedAttributes } from './components';
 
 export interface CompiledPage {
   toc: TOCItemType[];
@@ -35,10 +32,12 @@ declare module 'vfile' {
 }
 
 /**
- * Content comes from a repo that is edited outside of code review, so it must never execute code:
- * imports/exports and `{expressions}` are dropped, and JSX is limited to an allow list with literal attributes.
+ * Content comes from a repo that is edited outside of code review, so it must never execute code or break rendering:
+ * imports/exports and `{expressions}` are dropped, and JSX is limited to the tags and attributes of the registry.
  */
 const remarkSafeJsx: Plugin<[], Root> = () => (tree) => {
+  const checklistIds = new Set<string>();
+
   visit(tree, (node, index, parent) => {
     if (!parent || index === undefined) return;
 
@@ -53,16 +52,31 @@ const remarkSafeJsx: Plugin<[], Root> = () => (tree) => {
 
     if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return;
 
-    if (!node.name || !(allowedComponents.has(node.name) || allowedElements.has(node.name))) {
+    const allowed = node.name ? allowedAttributes(node.name) : undefined;
+    if (!node.name || !allowed) {
       parent.children.splice(index, 1, ...(node.children as never[]));
       return [SKIP, index];
     }
 
     const properties: Record<string, string | boolean> = {};
     for (const attribute of node.attributes) {
-      if (attribute.type !== 'mdxJsxAttribute') continue;
-      if (attribute.value == null) properties[attribute.name] = true;
-      else if (typeof attribute.value === 'string') properties[attribute.name] = attribute.value;
+      if (attribute.type !== 'mdxJsxAttribute' || !Object.hasOwn(allowed, attribute.name)) continue;
+
+      const values = allowed[attribute.name];
+      if (attribute.value == null) {
+        if (values === true) properties[attribute.name] = true;
+      } else if (typeof attribute.value === 'string') {
+        if (values === true || values.includes(attribute.value)) properties[attribute.name] = attribute.value;
+      }
+    }
+
+    // each checklist saves its progress under its id, so ids must exist and be unique within the page
+    if (node.name === 'Checklist') {
+      const base = typeof properties.id === 'string' && properties.id !== '' ? properties.id : 'lista';
+      let id = base;
+      for (let n = 2; checklistIds.has(id); n++) id = `${base}-${n}`;
+      checklistIds.add(id);
+      properties.id = id;
     }
 
     node.data = { ...node.data, hName: node.name, hProperties: properties };

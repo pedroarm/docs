@@ -6,9 +6,15 @@ import { frontmatter } from 'fumadocs-core/content/md/frontmatter';
 import type { StructuredData } from 'fumadocs-core/mdx-plugins';
 import { contentRepo, docsRoute, localContentDir, previewRoute } from './config';
 import { compile, type CompiledPage } from './content/compile';
-import { getBranchHead, getGithubLastEdit, getGithubSnapshot } from './content/github';
+import {
+  getBranchHead,
+  getGithubLastEdit,
+  getGithubSnapshot,
+  getPublishedHead,
+} from './content/github';
 import { getLocalLastEdit, getLocalSnapshot } from './content/local';
 import type { ContentFile, ContentSnapshot } from './content/types';
+import { remember } from './lru';
 
 export interface DocsPageData extends PageData {
   title: string;
@@ -28,6 +34,31 @@ function text(value: unknown) {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
+/** Read a `meta.json`, keeping only the fields we support and only when they have the expected type. */
+function parseMeta(content: string): MetaData | undefined {
+  let json: unknown;
+  try {
+    json = JSON.parse(content);
+  } catch {
+    return undefined;
+  }
+  if (typeof json !== 'object' || json === null || Array.isArray(json)) return undefined;
+
+  const raw = json as Record<string, unknown>;
+  const flag = (value: unknown) => (typeof value === 'boolean' ? value : undefined);
+  const pages = Array.isArray(raw.pages) ? raw.pages.filter((item) => typeof item === 'string') : undefined;
+
+  return {
+    title: text(raw.title),
+    description: text(raw.description),
+    icon: text(raw.icon),
+    root: flag(raw.root),
+    defaultOpen: flag(raw.defaultOpen),
+    collapsible: flag(raw.collapsible),
+    pages,
+  };
+}
+
 function titleFromPath(path: string) {
   const name = path.split('/').at(-1)!.replace(/\.mdx?$/, '');
   return name.charAt(0).toUpperCase() + name.slice(1).replaceAll('-', ' ');
@@ -38,11 +69,9 @@ function toVirtualFiles(snapshot: ContentSnapshot): VirtualFile<Config>[] {
 
   for (const file of snapshot.files) {
     if (file.path.endsWith('.json')) {
-      try {
-        out.push({ type: 'meta', path: file.path, data: JSON.parse(file.content) as MetaData });
-      } catch {
-        // an invalid meta.json should not take the whole site down, the folder falls back to defaults
-      }
+      // an invalid meta.json should not take the whole site down, the folder falls back to defaults
+      const data = parseMeta(file.content);
+      if (data) out.push({ type: 'meta', path: file.path, data });
       continue;
     }
 
@@ -119,10 +148,7 @@ export type DocsPage = NonNullable<ReturnType<DocsSource['getPage']>>;
 
 async function publishedSnapshot() {
   if (localContentDir) return getLocalSnapshot(localContentDir);
-
-  const head = await getBranchHead(contentRepo.branch);
-  if (!head) throw new Error(`Branch "${contentRepo.branch}" not found in the content repo`);
-  return getGithubSnapshot(head);
+  return getGithubSnapshot(await getPublishedHead());
 }
 
 const published = createDocs(docsRoute, publishedSnapshot);
@@ -148,16 +174,13 @@ export function previewUrl(branch: string) {
 export const getPreviewDocs = cache(async (branch: string): Promise<Docs | null> => {
   if (localContentDir) return null;
 
-  let docs = previews.get(branch);
-  if (!docs) {
-    docs = createDocs(previewUrl(branch), async () => {
+  const docs = remember(previews, branch, 8, () =>
+    createDocs(previewUrl(branch), async () => {
       const head = await getBranchHead(branch);
       if (!head) throw new BranchNotFound();
       return getGithubSnapshot(head);
-    });
-    previews.set(branch, docs);
-    if (previews.size > 8) previews.delete(previews.keys().next().value!);
-  }
+    }),
+  );
 
   try {
     return { ...(await docs()), branch, preview: true };

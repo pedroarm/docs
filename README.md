@@ -6,8 +6,14 @@ Site da documentação da equipe técnica. O conteúdo não fica aqui: as págin
 
 - **Conteúdo publicado**: a branch `main` do `docs-content`. O resultado fica em cache até o webhook do GitHub chamar `POST /api/revalidate`, que expira a tag `content`.
 - **Pré-visualização**: `/preview/<branch>` renderiza qualquer branch do `docs-content` sem cache e fora dos buscadores.
-- **Markdown seguro**: o conteúdo é interpretado como MDX, mas `import`, `export` e expressões `{}` são descartados e só os componentes da lista em `src/lib/content/compile.ts` são aceitos. Nada do repositório de conteúdo é executado.
+- **Markdown seguro**: o conteúdo é interpretado como MDX, mas `import`, `export` e expressões `{}` são descartados e só os componentes e atributos registrados em `src/lib/content/components.ts` são aceitos. Nada do repositório de conteúdo é executado.
 - **Busca**: índice Orama gerado no servidor a partir do conteúdo publicado (`/api/search`).
+
+## Adicionar um componente ao Markdown
+
+1. Registre o nome e os atributos aceitos em `src/lib/content/components.ts`.
+2. Implemente o componente e inclua-o em `getMarkdownComponents`, em `src/components/markdown/index.tsx`. Enquanto isso não for feito, a checagem de tipos falha.
+3. Documente a sintaxe para os autores em `docs/onboarding/como-contribuir.md`, no repositório `docs-content`.
 
 ## Desenvolvimento
 
