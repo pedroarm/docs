@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  // lets a phone on the home network load the dev server, to check pages on a real device
+  allowedDevOrigins: ['192.168.*.*'],
   images: {
     remotePatterns: [
       // images of the content repo

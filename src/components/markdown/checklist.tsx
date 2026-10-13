@@ -124,7 +124,7 @@ export function Checklist({ id = 'default', children }: { id?: string; children:
             ref={resetButton}
             type="button"
             onClick={() => write(key, [])}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium pointer-coarse:min-h-11 pointer-coarse:px-3 transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground disabled:pointer-events-none disabled:opacity-50"
           >
             <RotateCcw className="size-3.5" />
             Limpar

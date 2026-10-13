@@ -19,6 +19,13 @@
   --color-fd-ring: hsl(213, 94%, 68%);
 }
 
+/* one frame for the whole site: header, area tabs, home index and docs pages share the same edges,
+   and prose stays near 67 characters per line on wide screens */
+:root,
+[class*='[--fd-layout-width:'] {
+  --fd-layout-width: 80rem;
+}
+
 html {
   scrollbar-gutter: stable;
 }
@@ -69,4 +76,22 @@ html > body[data-scroll-locked] {
 
 .checklist ul.contains-task-list {
   margin: 0;
+}
+
+/* browser surfaces follow the accent instead of the system defaults */
+::selection {
+  background: color-mix(in oklab, var(--color-fd-primary) 22%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-fd-ring);
+  outline-offset: 2px;
+}
+
+html {
+  scrollbar-color: var(--color-fd-border) transparent;
+}
+
+.prose :where(td, th) {
+  font-variant-numeric: tabular-nums;
 }

@@ -4,7 +4,7 @@ import {
   DocsPage,
   DocsTitle,
   EditOnGitHub,
-} from 'fumadocs-ui/layouts/docs/page';
+} from 'fumadocs-ui/layouts/notebook/page';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { contentRoot, repoUrl } from '@/lib/config';
 import { getLastEdit, type Docs, type DocsPage as Page } from '@/lib/source';
@@ -21,7 +21,12 @@ export async function DocsPageView({ docs, page }: { docs: Docs; page: Page }) {
   const failed = compiled instanceof Error;
 
   return (
-    <DocsPage toc={failed ? [] : compiled.toc} full={page.data.full}>
+    <DocsPage
+      toc={failed ? [] : compiled.toc}
+      full={page.data.full}
+      // the area tabs are hidden on small screens, the breadcrumb keeps saying which area this is
+      breadcrumb={{ includeRoot: true }}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
