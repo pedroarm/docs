@@ -10,7 +10,7 @@ export function SearchButton() {
     <button
       type="button"
       onClick={() => setOpenSearch(true)}
-      className="flex w-full items-center gap-3 rounded-xl border bg-fd-card px-4 py-3.5 text-left text-fd-muted-foreground shadow-sm transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground"
+      className="search-trigger flex min-h-12 w-full items-center gap-3 rounded-lg border border-fd-border bg-fd-card px-4 py-3 text-left text-fd-muted-foreground transition-colors hover:border-fd-primary hover:bg-fd-accent hover:text-fd-accent-foreground"
     >
       <Search className="size-5 shrink-0" />
       <span className="flex-1">Buscar na documentação…</span>

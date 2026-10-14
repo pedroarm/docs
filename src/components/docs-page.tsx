@@ -43,8 +43,8 @@ export async function DocsPageView({ docs, page }: { docs: Docs; page: Page }) {
       // the area tabs are hidden on small screens, the breadcrumb keeps saying which area this is
       breadcrumb={{ includeRoot: true }}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsTitle className="editorial-title text-balance text-[2rem] sm:text-[2.25rem]">{page.data.title}</DocsTitle>
+      <DocsDescription className="mt-3 leading-relaxed">{page.data.description}</DocsDescription>
       <DocsBody>
         {failure ? (
           <>
